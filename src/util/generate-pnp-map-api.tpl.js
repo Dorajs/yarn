@@ -309,6 +309,31 @@ exports.getPackageInformation = function getPackageInformation({name, reference}
   return packageInformation;
 };
 
+function deepFindDependenceReference(issuerLocator, issuerInformation, dependencyName) {
+  for (const entry of issuerInformation.packageDependencies) {
+    const name = entry[0];
+    if (issuerLocator.name == name) {
+      continue;
+    }
+    const reference = entry[1];
+    const childIssuerLocator = {name, reference};
+    const packageInformation = getPackageInformationSafe(childIssuerLocator);
+    if (packageInformation != null) {
+      if (dependencyName == name) {
+        return {
+          issuerLocator: childIssuerLocator,
+          packageInformation,
+        };
+      }
+      const result = deepFindDependenceReference(childIssuerLocator, packageInformation, dependencyName);
+      if (result != null) {
+        return result;
+      }
+    }
+  }
+  return null;
+}
+
 /**
  * Transforms a request (what's typically passed as argument to the require function) into an unqualified path.
  * This path is called "unqualified" because it only changes the package name to the package location on the disk,
@@ -376,8 +401,9 @@ exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {c
 
   if (dependencyNameMatch) {
     const [, dependencyName, subPath] = dependencyNameMatch;
-
-    const issuerLocator = exports.findPackageLocator(issuer);
+    let issuerLocator = exports.findPackageLocator(issuer);
+//    console.log(`dependencyNameMatch`);
+//    console.log({issuer, dependencyNameMatch, issuerLocator});
 
     // If the issuer file doesn't seem to be owned by a package managed through pnp, then we resort to using the next
     // resolution algorithm in the chain, usually the native Node resolution one
@@ -404,7 +430,15 @@ exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {c
     // We obtain the dependency reference in regard to the package that request it
 
     let dependencyReference = issuerInformation.packageDependencies.get(dependencyName);
+//    console.log({issuerInformation, issuerLocator, dependencyName, dependencyReference});
 
+    if (!dependencyReference) {
+      const deepSearch = deepFindDependenceReference(issuerLocator, issuerInformation, dependencyName);
+      if (deepSearch != null) {
+        issuerLocator = deepSearch.issuerLocator;
+        dependencyReference = deepSearch.packageInformation.packageDependencies.get(dependencyName);
+      }
+    }
     // If we can't find it, we check if we can potentially load it from the packages that have been defined as potential fallbacks.
     // It's a bit of a hack, but it improves compatibility with the existing Node ecosystem. Hopefully we should eventually be able
     // to kill this logic and become stricter once pnp gets enough traction and the affected packages fix themselves.
