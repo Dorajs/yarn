@@ -387,7 +387,7 @@ export default class Config {
       this.plugnplayPersist = false;
     } else if (opts.enablePnp || opts.disablePnp) {
       this.plugnplayEnabled = !!opts.enablePnp;
-      this.plugnplayPersist = true;
+      this.plugnplayPersist = false;
     } else if (manifest && manifest.installConfig && manifest.installConfig.pnp) {
       this.plugnplayEnabled = !!manifest.installConfig.pnp;
       this.plugnplayPersist = false;
