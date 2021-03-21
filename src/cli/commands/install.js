@@ -560,10 +560,10 @@ export class Install {
       this.reporter.warn(this.reporter.lang('npmLockfileWarning'));
     }
 
-    if (this.config.plugnplayEnabled) {
-      this.reporter.info(this.reporter.lang('plugnplaySuggestV2L1'));
-      this.reporter.info(this.reporter.lang('plugnplaySuggestV2L2'));
-    }
+    // if (this.config.plugnplayEnabled) {
+    //   this.reporter.info(this.reporter.lang('plugnplaySuggestV2L1'));
+    //   this.reporter.info(this.reporter.lang('plugnplaySuggestV2L2'));
+    // }
 
     let flattenedTopLevelPatterns: Array<string> = [];
     const steps: Array<(curr: number, total: number) => Promise<{bailout: boolean} | void>> = [];
